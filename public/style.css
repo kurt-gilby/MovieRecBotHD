@@ -1,0 +1,90 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #121212;
+    color: #f0f0f0;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  #chat-form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  #userMessage {
+    width: 60%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+  }
+  
+  #submitBtn {
+    padding: 10px 15px;
+    margin-left: 10px;
+    font-size: 16px;
+    background-color: #00aaff;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+  }
+  
+  #gpt-response {
+    margin-top: 1rem;
+    font-style: italic;
+    color: #666;
+    text-align: center;
+    display: none; /* Hidden by default */
+  }
+  
+  .movie {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 300px;
+  }
+  
+  .movie img {
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .movie-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }  
+  .trivia {
+    color: #ffd54f;
+    font-style: italic;
+    margin-top: 10px;
+  }
+  #micBtn {
+    padding: 10px 15px;
+    margin-left: 10px;
+    font-size: 16px;
+    background-color: #ff4081;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+  }
+  .recording {
+    background-color: red !important;
+    animation: pulse 1s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+  }
