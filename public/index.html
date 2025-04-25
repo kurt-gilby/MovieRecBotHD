@@ -15,9 +15,14 @@
     <button id="micBtn" type="button">🎤</button>
     <button id="submitBtn" type="submit">Send</button>
   </form>
+  <!-- 🆕 Playback button -->
+  <button id="playbackBtn" style="margin-top:10px; display:none;">▶️ Play Captured Audio</button>
 
   <div id="gpt-response"></div>
   <div class="movie-list" id="movie-list"></div>
+
+  <!-- 🆕 Hidden Audio Player -->
+  <audio id="audioPlayer" controls style="margin-top:20px; display:none;"></audio>
 
   <!-- Link external JS -->
   <script src="script.js"></script>
