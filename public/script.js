@@ -66,7 +66,7 @@ chatForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
-    gptResponse.innerHTML = `<strong>🎬 You asked:</strong> ${message}`;
+    gptResponse.innerHTML = `<strong>🎬 You asked:</strong> ${message}<br><strong>🤖 GPT4.1 suggests(Content sourced from TMDb):</strong>`;
     userMessageInput.value = ""; // Clear input
 
     data.movieSuggestions.forEach((movie) => {
@@ -75,13 +75,44 @@ chatForm.addEventListener("submit", async (e) => {
       const posterPath = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
         : "https://via.placeholder.com/300x450?text=No+Image";
-
-      card.innerHTML = `
-        <img src="${posterPath}" alt="${movie.title}" />
-        <h3>${movie.title}</h3>
-        <p><strong>Release:</strong> ${movie.release_date}</p>
-        <p>${movie.overview}</p>
-      `;
+    
+        const genreMap = {
+            28: "Action",
+            12: "Adventure",
+            16: "Animation",
+            35: "Comedy",
+            80: "Crime",
+            99: "Documentary",
+            18: "Drama",
+            10751: "Family",
+            14: "Fantasy",
+            36: "History",
+            27: "Horror",
+            10402: "Music",
+            9648: "Mystery",
+            10749: "Romance",
+            878: "Science Fiction",
+            10770: "TV Movie",
+            53: "Thriller",
+            10752: "War",
+            37: "Western"
+          };
+          
+          const genreNames = movie.genre_ids
+          ? movie.genre_ids.map(id => genreMap[id] || id).join(", ")
+          : "N/A";
+          
+          card.innerHTML = `
+          <img src="${posterPath}" alt="${movie.title}" />
+          <h3>${movie.title}</h3>
+          <p><strong>Overview:</strong> ${movie.overview || "No description available."}</p>
+          <p><strong>Release Date:</strong> ${movie.release_date || "Unknown"}</p>
+          <p><strong>Popularity:</strong> 🔥 ${movie.popularity?.toFixed(1) || "N/A"}</p>
+          <p><strong>Original Language:</strong> 🎥 ${movie.original_language?.toUpperCase() || "N/A"}</p>
+          <p><strong>Average Rating:</strong> ⭐ ${movie.vote_average?.toFixed(1) || "N/A"}</p>
+          <p><strong>Vote Count:</strong> 🧮 ${movie.vote_count || "N/A"}</p>
+          <p><strong>Genres:</strong> 🎬 ${genreNames}</p>
+        `;
       document.getElementById("movie-list").appendChild(card);
     });
 
