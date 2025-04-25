@@ -9,8 +9,8 @@ let capturedAudioBlob = null;
 // Text input submit
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const message = userMessageInput.value;
   document.getElementById("gpt-response").textContent = "🤔 Thinking...";
+  const message = userMessageInput.value;  
   document.getElementById("movie-list").innerHTML = "";
 
   try {
@@ -69,12 +69,14 @@ micButton.addEventListener("click", async () => {
     };
 
     recorder.onstop = async () => {
+    document.getElementById("gpt-response").textContent = "";
       micButton.classList.remove("recording");
       capturedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
       // Set up playback
       const audioURL = URL.createObjectURL(capturedAudioBlob);
       audioPlayer.src = audioURL;
+      audioPlayer.volume = 1.0;
       audioPlayer.style.display = "block";
       playbackBtn.style.display = "inline-block";
 
