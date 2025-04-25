@@ -1,13 +1,13 @@
-//This is just added
 const micButton = document.getElementById("micBtn");
 const userMessageInput = document.getElementById("userMessage");
 const chatForm = document.getElementById("chat-form");
 const playbackBtn = document.getElementById("playbackBtn");
 const audioPlayer = document.getElementById("audioPlayer");
+const gptResponse = document.getElementById("gpt-response");
 
 let capturedAudioBlob = null;
 
-// 📢 New function: Amplify audio
+// ✅ Amplify audio function
 async function amplifyAudio(blob, gainFactor = 2.0) {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
   const arrayBuffer = await blob.arrayBuffer();
@@ -23,7 +23,7 @@ async function amplifyAudio(blob, gainFactor = 2.0) {
     const input = audioBuffer.getChannelData(channel);
     const output = boostedBuffer.getChannelData(channel);
     for (let i = 0; i < input.length; i++) {
-      output[i] = Math.max(-1, Math.min(1, input[i] * gainFactor)); // Clip safely
+      output[i] = Math.max(-1, Math.min(1, input[i] * gainFactor));
     }
   }
 
@@ -50,14 +50,15 @@ async function amplifyAudio(blob, gainFactor = 2.0) {
   });
 }
 
-// ✍️ Text input submit
+// ✅ Chat form submit (text or voice)
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  document.getElementById("gpt-response").textContent = "🤔 Thinking...";
-  const message = userMessageInput.value;  
+  gptResponse.textContent = "🤔 Thinking...";
+  gptResponse.style.display = "block";
   document.getElementById("movie-list").innerHTML = "";
 
   try {
+    const message = userMessageInput.value;
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -65,9 +66,8 @@ chatForm.addEventListener("submit", async (e) => {
     });
 
     const data = await response.json();
-
-    document.getElementById("gpt-response").textContent = "GPT Reply:\n" + data.gptReply;
-    document.getElementById("gpt-response").style.display = "block";
+    gptResponse.innerHTML = `<strong>🎬 You asked:</strong> ${message}`;
+    userMessageInput.value = ""; // Clear input
 
     data.movieSuggestions.forEach((movie) => {
       const card = document.createElement("div");
@@ -82,19 +82,19 @@ chatForm.addEventListener("submit", async (e) => {
         <p><strong>Release:</strong> ${movie.release_date}</p>
         <p>${movie.overview}</p>
       `;
-
       document.getElementById("movie-list").appendChild(card);
     });
 
   } catch (err) {
-    document.getElementById("gpt-response").textContent = "❌ Error: " + err.message;
+    gptResponse.textContent = "❌ Error: " + err.message;
     console.error(err);
   }
 });
 
-// 🎤 Mic recording
+// ✅ Mic recording & auto-submit
 micButton.addEventListener("click", async () => {
-  document.getElementById("gpt-response").textContent = "🎤 Listening...";
+  gptResponse.textContent = "🎤 Listening...";
+  gptResponse.style.display = "block";
   micButton.classList.add("recording");
 
   if (!navigator.mediaDevices || !window.MediaRecorder) {
@@ -113,42 +113,16 @@ micButton.addEventListener("click", async () => {
     };
 
     recorder.onstop = async () => {
-      document.getElementById("gpt-response").textContent = "";
       micButton.classList.remove("recording");
+      gptResponse.textContent = "🤔 Thinking...";
 
       const originalBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      capturedAudioBlob = await amplifyAudio(originalBlob, 2.0); // ✅ Boosted Blob
+      capturedAudioBlob = await amplifyAudio(originalBlob);
 
-      // Set up playback
-      const audioURL = URL.createObjectURL(capturedAudioBlob);
-      audioPlayer.src = audioURL;
-      audioPlayer.volume = 1.0;
-      audioPlayer.style.display = "block";
-      playbackBtn.style.display = "inline-block";
+      // 🔕 Hide playback & download
+      audioPlayer.style.display = "none";
+      playbackBtn.style.display = "none";
 
-      // ✅ Now create Download Button
-        let downloadBtn = document.getElementById("downloadBtn");
-        if (!downloadBtn) {
-        downloadBtn = document.createElement("button");
-        downloadBtn.id = "downloadBtn";
-        downloadBtn.textContent = "⬇️ Download Recording";
-        downloadBtn.style.marginTop = "10px";
-        document.body.appendChild(downloadBtn);
-        }
-
-
-      downloadBtn.addEventListener("click", () => {
-        const blobURL = URL.createObjectURL(capturedAudioBlob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = blobURL;
-        a.download = "recording.webm"; 
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(blobURL);
-      });
-
-      // Send amplified audio to Azure
       const formData = new FormData();
       formData.append("audio", capturedAudioBlob, "recording.webm");
 
@@ -161,32 +135,32 @@ micButton.addEventListener("click", async () => {
         const data = await response.json();
 
         if (data.text) {
-          console.log("🎤 Recognized speech:", data.text);
           userMessageInput.value = data.text;
           chatForm.dispatchEvent(new Event('submit'));
         } else {
-          alert("❌ Could not recognize any speech. Please try again.");
+          gptResponse.textContent = "❌ Could not recognize any speech.";
         }
 
       } catch (err) {
-        console.error("❌ Error sending audio for transcription:", err.message);
+        console.error("❌ Speech error:", err.message);
+        gptResponse.textContent = "❌ Speech processing failed.";
       }
     };
 
     recorder.start();
-    console.log("🎤 Recording started...");
+    console.log("🎤 Recording...");
     setTimeout(() => {
       recorder.stop();
-      console.log("🛑 Recording stopped after 5 seconds");
-    }, 5000); // 5 seconds max
+      console.log("🛑 Recording stopped.");
+    }, 5000);
 
-  } catch (error) {
+  } catch (err) {
     micButton.classList.remove("recording");
-    console.error("❌ Error during recording:", error.message);
+    console.error("❌ Error during mic access:", err.message);
   }
 });
 
-// ▶️ Play captured audio
+// ⏯️ Playback removed
 playbackBtn.addEventListener("click", () => {
   if (capturedAudioBlob) {
     audioPlayer.play();
