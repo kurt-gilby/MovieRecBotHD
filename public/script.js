@@ -1,10 +1,12 @@
-// Updated script.js - Speech input + Text input + Mic visual feedback
-
 const micButton = document.getElementById("micBtn");
 const userMessageInput = document.getElementById("userMessage");
 const chatForm = document.getElementById("chat-form");
+const playbackBtn = document.getElementById("playbackBtn");
+const audioPlayer = document.getElementById("audioPlayer");
 
-// Handle Text Input Submission
+let capturedAudioBlob = null;
+
+// Text input submit
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const message = userMessageInput.value;
@@ -14,16 +16,14 @@ chatForm.addEventListener("submit", async (e) => {
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userMessage: message }),
     });
 
     const data = await response.json();
 
     document.getElementById("gpt-response").textContent = "GPT Reply:\n" + data.gptReply;
-    document.getElementById("gpt-response").style.display = "block"; // Just in case it's hidden
+    document.getElementById("gpt-response").style.display = "block";
 
     data.movieSuggestions.forEach((movie) => {
       const card = document.createElement("div");
@@ -48,9 +48,8 @@ chatForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Handle Mic Button + Azure Speech-to-Text + Auto Submit
+// 🆕 Mic recording
 micButton.addEventListener("click", async () => {
-  // Immediately show recording started
   document.getElementById("gpt-response").textContent = "🎤 Listening...";
   micButton.classList.add("recording");
 
@@ -71,19 +70,22 @@ micButton.addEventListener("click", async () => {
 
     recorder.onstop = async () => {
       micButton.classList.remove("recording");
-      document.getElementById("gpt-response").textContent = "🧠 Transcribing...";
+      capturedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const base64Audio = arrayBufferToBase64(arrayBuffer);
+      // Set up playback
+      const audioURL = URL.createObjectURL(capturedAudioBlob);
+      audioPlayer.src = audioURL;
+      audioPlayer.style.display = "block";
+      playbackBtn.style.display = "inline-block";
+
+      // Prepare FormData to send
+      const formData = new FormData();
+      formData.append("audio", capturedAudioBlob, "recording.webm");
 
       try {
         const response = await fetch("/api/speech", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ audio: base64Audio }),
+          body: formData
         });
 
         const data = await response.json();
@@ -91,7 +93,6 @@ micButton.addEventListener("click", async () => {
         if (data.text) {
           console.log("🎤 Recognized speech:", data.text);
           userMessageInput.value = data.text;
-          // Auto-submit the form
           chatForm.dispatchEvent(new Event('submit'));
         } else {
           alert("❌ Could not recognize any speech. Please try again.");
@@ -106,8 +107,8 @@ micButton.addEventListener("click", async () => {
     console.log("🎤 Recording started...");
     setTimeout(() => {
       recorder.stop();
-      console.log("🛑 Recording stopped after 3 seconds");
-    }, 3000); // 3 seconds recording
+      console.log("🛑 Recording stopped after 5 seconds");
+    }, 5000); // 5 seconds max
 
   } catch (error) {
     micButton.classList.remove("recording");
@@ -115,13 +116,9 @@ micButton.addEventListener("click", async () => {
   }
 });
 
-// Utility function to convert ArrayBuffer to Base64
-function arrayBufferToBase64(buffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
+// Play captured audio
+playbackBtn.addEventListener("click", () => {
+  if (capturedAudioBlob) {
+    audioPlayer.play();
   }
-  return window.btoa(binary);
-}
+});
