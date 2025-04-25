@@ -1,3 +1,4 @@
+//This is just added
 const micButton = document.getElementById("micBtn");
 const userMessageInput = document.getElementById("userMessage");
 const chatForm = document.getElementById("chat-form");
@@ -6,7 +7,50 @@ const audioPlayer = document.getElementById("audioPlayer");
 
 let capturedAudioBlob = null;
 
-// Text input submit
+// 📢 New function: Amplify audio
+async function amplifyAudio(blob, gainFactor = 2.0) {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const arrayBuffer = await blob.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+  const boostedBuffer = audioContext.createBuffer(
+    audioBuffer.numberOfChannels,
+    audioBuffer.length,
+    audioBuffer.sampleRate
+  );
+
+  for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+    const input = audioBuffer.getChannelData(channel);
+    const output = boostedBuffer.getChannelData(channel);
+    for (let i = 0; i < input.length; i++) {
+      output[i] = Math.max(-1, Math.min(1, input[i] * gainFactor)); // Clip safely
+    }
+  }
+
+  const destination = audioContext.createMediaStreamDestination();
+  const source = audioContext.createBufferSource();
+  source.buffer = boostedBuffer;
+  source.connect(destination);
+  source.start();
+
+  const mediaRecorder = new MediaRecorder(destination.stream);
+  const chunks = [];
+
+  return new Promise((resolve) => {
+    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const boostedBlob = new Blob(chunks, { type: 'audio/webm' });
+      resolve(boostedBlob);
+    };
+    mediaRecorder.start();
+    setTimeout(() => {
+      mediaRecorder.stop();
+      source.stop();
+    }, boostedBuffer.duration * 1000);
+  });
+}
+
+// ✍️ Text input submit
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   document.getElementById("gpt-response").textContent = "🤔 Thinking...";
@@ -48,7 +92,7 @@ chatForm.addEventListener("submit", async (e) => {
   }
 });
 
-// 🆕 Mic recording
+// 🎤 Mic recording
 micButton.addEventListener("click", async () => {
   document.getElementById("gpt-response").textContent = "🎤 Listening...";
   micButton.classList.add("recording");
@@ -69,9 +113,11 @@ micButton.addEventListener("click", async () => {
     };
 
     recorder.onstop = async () => {
-    document.getElementById("gpt-response").textContent = "";
+      document.getElementById("gpt-response").textContent = "";
       micButton.classList.remove("recording");
-      capturedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+      const originalBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      capturedAudioBlob = await amplifyAudio(originalBlob, 2.0); // ✅ Boosted Blob
 
       // Set up playback
       const audioURL = URL.createObjectURL(capturedAudioBlob);
@@ -80,7 +126,29 @@ micButton.addEventListener("click", async () => {
       audioPlayer.style.display = "block";
       playbackBtn.style.display = "inline-block";
 
-      // Prepare FormData to send
+      // ✅ Now create Download Button
+        let downloadBtn = document.getElementById("downloadBtn");
+        if (!downloadBtn) {
+        downloadBtn = document.createElement("button");
+        downloadBtn.id = "downloadBtn";
+        downloadBtn.textContent = "⬇️ Download Recording";
+        downloadBtn.style.marginTop = "10px";
+        document.body.appendChild(downloadBtn);
+        }
+
+
+      downloadBtn.addEventListener("click", () => {
+        const blobURL = URL.createObjectURL(capturedAudioBlob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = blobURL;
+        a.download = "recording.webm"; 
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(blobURL);
+      });
+
+      // Send amplified audio to Azure
       const formData = new FormData();
       formData.append("audio", capturedAudioBlob, "recording.webm");
 
@@ -118,7 +186,7 @@ micButton.addEventListener("click", async () => {
   }
 });
 
-// Play captured audio
+// ▶️ Play captured audio
 playbackBtn.addEventListener("click", () => {
   if (capturedAudioBlob) {
     audioPlayer.play();
