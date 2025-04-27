@@ -35,8 +35,10 @@ Built using **Node.js**, **Azure AI Services**, **OpenAI GPT-4.1**, and **TMDb A
 - style.css
 - script.js /server
 - index.js # Express Server
+
 routes/
 - movie.js # API Routes
+
 utils/
 - gpt.js # GPT integration
 - tmdb.js # TMDb fetch
@@ -76,5 +78,4 @@ node index.js
 
 📄 License
 This project is for educational and personal use.
-Commercial usage requires API providers' license agreements (Azure, TMDb).
-
+Commercial usage requires API providers' license agreements (Azure, TMDb).htt
