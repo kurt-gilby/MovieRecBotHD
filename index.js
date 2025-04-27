@@ -13,7 +13,6 @@ app.use(express.static('public'));
 
 const movieRouter = require('./routes/movie');
 const recognizeSpeechFromAudio = require('./utils/speech'); // Import the speech recognition function
-const { extractTextFromImage } = require('./utils/vision'); // ✅ Import from vision.js
 const upload = multer(); // 🆕 Multer in-memory storage
 
 // 🆕 Setup new /api/speech route
@@ -25,21 +24,6 @@ app.post("/api/speech", upload.single('audio'), async (req, res) => {
     } catch (error) {
       console.error("❌ Error in /api/speech route:", error);
       res.status(500).json({ error: "Speech recognition failed" });
-    }
-  });
-
-// New endpoint for OCR
-app.post('/api/ocr', upload.single('image'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No image uploaded.' });
-      }
-  
-      const textExtracted = await extractTextFromImage(req.file.buffer);
-      res.json({ text: textExtracted });
-    } catch (err) {
-      console.error('❌ Error in OCR:', err.message);
-      res.status(500).json({ error: 'OCR processing failed.' });
     }
   });
 

@@ -7,32 +7,35 @@
   <!-- Link external CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
+<!-- Link external JS -->
 <body>
   <h1>🎥 Movie Recommendation Assistant</h1>
 
-  <form id="chat-form">
-    <input type="text" id="userMessage" placeholder="Ask me for a movie suggestion..." required />
-    <button id="micBtn" type="button">🎤</button>
-    <button id="submitBtn" type="submit">Send</button>
-  </form>
+  <div class="controls">
+    <form id="chat-form" enctype="multipart/form-data">
+      <input type="text" id="userMessage" placeholder="Type your movie question..." required />
+  
+      <!-- 🥇 First: Submit Button -->
+      <button type="submit" id="submitBtn" class="btn">Send Text</button>
+  
+      <!-- 🥈 Second: Record Button -->
+      <button type="button" id="micBtn" class="btn">🎤 Record Audio</button>
+  
+      <!-- 🥉 Third: Upload Image Button -->
+      <!-- 📸 Upload Button -->
+      <label for="imageInput" class="btn upload-btn">📸 Upload Poster</label>
+
+      <!-- Hidden File Input -->
+      <input type="file" id="imageInput" accept="image/*" style="display:none;" />
+    </form>
+  </div>
+  
   <!-- 🆕 Playback button -->
   <button id="playbackBtn" style="margin-top:10px; display:none;">▶️ Play Captured Audio</button>
-git
   <div id="gpt-response"></div>
   <div class="movie-list" id="movie-list"></div>
-
   <!-- 🆕 Hidden Audio Player -->
   <audio id="audioPlayer" controls style="margin-top:20px; display:none;"></audio>
-  
-  <!-- Image Upload Section -->
-<form id="image-form" enctype="multipart/form-data" style="margin-top: 20px;">
-  <label for="imageInput" class="upload-label">📷 Upload Movie Poster</label>
-  <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;" />
-</form>
-<p style="font-size: 0.9rem; color: #aaa;">Select a clear movie poster image. We'll extract the title and fetch info!</p>
-
-
-  <!-- Link external JS -->
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

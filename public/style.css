@@ -161,17 +161,18 @@ form, .input-container {
     display: none !important;
   }
   
-  .upload-label {
-    display: inline-block;
-    background-color: #222;
-    color: #eee;
-    padding: 10px 20px;
-    border-radius: 8px;
+  .upload-btn {
+    padding: 10px 15px; /* SAME as mic and submit buttons */
+    margin-left: 10px; /* SAME spacing */
+    font-size: 16px; /* SAME text size */
+    background-color: #673ab7; /* Fresh purple tone for Upload button (you can change if you want) */
+    border: none;
+    border-radius: 5px; /* SAME roundness */
+    color: white;
     cursor: pointer;
-    border: 1px solid #444;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
   }
   
-  .upload-label:hover {
-    background-color: #333;
+  .upload-btn:hover {
+    background-color: #5e35b1; /* Slightly darker on hover */
   }

@@ -201,7 +201,8 @@ playbackBtn.addEventListener("click", () => {
   }
 });
 
-imageForm.addEventListener('change', async () => {
+imageInput.addEventListener('change', async () => {
+  console.log("📸 Entered ImageForm Change");
   if (!imageInput.files || imageInput.files.length === 0) {
     alert("Please select an image.");
     return;
@@ -222,15 +223,50 @@ imageForm.addEventListener('change', async () => {
     });
 
     const ocrData = await ocrResponse.json();
+    console.log("📸 OCR Full Response:", ocrData);
 
-    if (ocrData.text) {
-      console.log("🔍 OCR Extracted:", ocrData.text);
-      userMessageInput.value = ocrData.text;
+    if (ocrData && ocrData.movieSuggestions && ocrData.movieSuggestions.length > 0) {
+      console.log("🖼️ OCR Extracted and Cleaned:", ocrData.gptReply);
 
-      // Auto submit the extracted text to GPT/movie search
-      chatForm.dispatchEvent(new Event('submit'));
+      gptResponse.innerHTML = `<strong>📸 Poster Scan Result:</strong><br><strong>🤖 GPT4.1 suggests(Content sourced from TMDb):</strong>`;
+
+      ocrData.movieSuggestions.forEach((movie) => {
+        const card = document.createElement("div");
+        card.className = "movie";
+
+        const posterPath = movie.poster_path
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          : "https://via.placeholder.com/300x450?text=No+Image";
+
+        const genreMap = {
+          28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
+          99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
+          27: "Horror", 10402: "Music", 9648: "Mystery", 10749: "Romance",
+          878: "Science Fiction", 10770: "TV Movie", 53: "Thriller",
+          10752: "War", 37: "Western"
+        };
+
+        const genreNames = movie.genre_ids
+          ? movie.genre_ids.map(id => genreMap[id] || id).join(", ")
+          : "N/A";
+
+        card.innerHTML = `
+          <img src="${posterPath}" alt="${movie.title}" />
+          <h3>${movie.title}</h3>
+          <p><strong>Overview:</strong> ${movie.overview || "No description available."}</p>
+          <p><strong>Release Date:</strong> ${movie.release_date || "Unknown"}</p>
+          <p><strong>Popularity:</strong> 🔥 ${movie.popularity?.toFixed(1) || "N/A"}</p>
+          <p><strong>Original Language:</strong> 🎥 ${movie.original_language?.toUpperCase() || "N/A"}</p>
+          <p><strong>Average Rating:</strong> ⭐ ${movie.vote_average?.toFixed(1) || "N/A"}</p>
+          <p><strong>Vote Count:</strong> 🧮 ${movie.vote_count || "N/A"}</p>
+          <p><strong>Genres:</strong> 🎬 ${genreNames}</p>
+        `;
+
+        document.getElementById("movie-list").appendChild(card);
+      });
+
     } else {
-      gptResponse.textContent = "❌ No text detected in image.";
+      gptResponse.textContent = "❌ No movie details detected from poster.";
     }
 
   } catch (err) {

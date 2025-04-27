@@ -1,33 +1,37 @@
-const axios = require('axios');
+const { ComputerVisionClient } = require("@azure/cognitiveservices-computervision");
+const { CognitiveServicesCredentials } = require("@azure/ms-rest-azure-js");
+require("dotenv").config();
 
+const endpoint = process.env.AZURE_SPEECH_ENDPOINT;
+const key = process.env.AZURE_SPEECH_KEY;
+
+// Setup client
+const credentials = new CognitiveServicesCredentials(key);
+const client = new ComputerVisionClient(credentials, endpoint);
+
+// 🆕 This is your OCR function
 async function extractTextFromImage(imageBuffer) {
-  const endpoint = process.env.AZURE_SPEECH_ENDPOINT; // ✅ Reuse existing endpoint
-  const key = process.env.AZURE_SPEECH_KEY;
+  const result = await client.readInStream(imageBuffer);
+  const operation = result.operationLocation.split('/').slice(-1)[0];
 
-  const url = `${endpoint}/vision/v3.2/read/analyze`; // Azure Read API (OCR)
+  let readResult;
+  while (true) {
+    readResult = await client.getReadResult(operation);
+    if (readResult.status !== 'running') {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
 
-  const headers = {
-    'Ocp-Apim-Subscription-Key': key,
-    'Content-Type': 'application/octet-stream',
-  };
-
-  const { headers: responseHeaders } = await axios.post(url, imageBuffer, { headers });
-  const operationLocation = responseHeaders['operation-location'];
-
-  // Wait briefly and fetch result
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Small wait
-  
-  const resultResponse = await axios.get(operationLocation, {
-    headers: { 'Ocp-Apim-Subscription-Key': key },
-  });
-
-  const lines = resultResponse.data.analyzeResult.readResults.flatMap(page => 
-    page.lines.map(line => line.text)
-  );
-
-  return lines.join(' ');
+  if (readResult.status === 'succeeded') {
+    const lines = readResult.analyzeResult.readResults.flatMap(page => page.lines.map(line => line.text));
+    return lines.join(' ');
+  } else {
+    throw new Error("Text extraction failed");
+  }
 }
 
-module.exports = extractTextFromImage;
-// This code defines a function to extract text from an image using Azure's Read API (OCR). It sends the image buffer to the API, retrieves the operation location, and then fetches the result after a brief wait. The extracted text is returned as a single string. The function uses Axios for HTTP requests and handles the response to extract lines of text from the image.
-// It also handles errors and logs them appropriately. The function is exported for use in other modules.
+// ❗ ADD THIS AT THE BOTTOM
+module.exports = { extractTextFromImage };
+// This function uses the Azure Computer Vision API to extract text from an image. It handles the asynchronous nature of the API call and returns the extracted text as a string. If the extraction fails, it throws an error.
+// The function is exported for use in other parts of the application. The endpoint and key are retrieved from environment variables for security reasons.

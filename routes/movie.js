@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const getGPTResponse = require('../utils/gpt');
+const { getGPTResponse, getCleanedOCRText, getRelevantMovieResponse } = require('../utils/gpt'); 
 const getRecommendations = require('../utils/tmdb');
 const recognizeSpeechFromAudio = require("../utils/speech");
-const extractTextFromImage = require("../utils/vision"); 
+const { extractTextFromImage } = require('../utils/vision'); 
+const multer = require('multer');
+const upload = multer(); // In-memory storage for file uploads
+
 
 
 
 router.post('/chat', async (req, res) => {
+    console.log("💬 Entered /chat route");
     const {userMessage} = req.body;
     console.log("Received:", userMessage);
     try {
@@ -24,6 +28,7 @@ router.post('/chat', async (req, res) => {
     });
     
 router.post('/speech', async (req, res) => {
+    console.log("🎤 Entered /speech route");
     try {
         const audioBuffer = req.body.audio; // We'll receive base64-encoded audio blob
         const audioBytes = Buffer.from(audioBuffer, 'base64');
@@ -36,20 +41,27 @@ router.post('/speech', async (req, res) => {
         res.status(500).send('Error processing speech');
     }
     });
-    router.post('/ocr', async (req, res) => {
+    
+    router.post('/ocr', upload.single('image'), async (req, res) => {
+        console.log("📸 Entered OCR route");
         try {
-            const imageBuffer = req.body.image; // Base64 image coming from frontend
-            const imageBytes = Buffer.from(imageBuffer, 'base64');
-    
-            const extractedText = await extractTextFromImage(imageBytes);
-    
-            res.json({ text: extractedText });
-    
+          const imageBytes = req.file.buffer;
+          const extractedText = await extractTextFromImage(imageBytes);
+          console.log("🖼️ OCR Extracted Text:", extractedText);
+      
+          const gptReply = await getCleanedOCRText(extractedText);
+          console.log("🎯 GPT Relevant Movie:", gptReply);
+      
+          const movieSuggestions = await getRecommendations(gptReply);
+          console.log("🎥 TMDb Results:", movieSuggestions);
+      
+          res.json({ gptReply, movieSuggestions });
+      
         } catch (error) {
-            console.error("❌ Error in /ocr route:", error.message);
-            res.status(500).send('Error processing image OCR');
+          console.error("❌ Error in /ocr route:", error.message);
+          res.status(500).send('Error processing image OCR');
         }
-    });
+      });
 
     module.exports = router;
 // This code defines a route for handling chat messages. It uses the OpenAI GPT model to generate a response based on the user's message and then fetches movie recommendations based on that response. 
