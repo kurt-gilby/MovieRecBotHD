@@ -17,12 +17,20 @@
   </form>
   <!-- 🆕 Playback button -->
   <button id="playbackBtn" style="margin-top:10px; display:none;">▶️ Play Captured Audio</button>
-
+git
   <div id="gpt-response"></div>
   <div class="movie-list" id="movie-list"></div>
 
   <!-- 🆕 Hidden Audio Player -->
   <audio id="audioPlayer" controls style="margin-top:20px; display:none;"></audio>
+  
+  <!-- Image Upload Section -->
+<form id="image-form" enctype="multipart/form-data" style="margin-top: 20px;">
+  <label for="imageInput" class="upload-label">📷 Upload Movie Poster</label>
+  <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;" />
+</form>
+<p style="font-size: 0.9rem; color: #aaa;">Select a clear movie poster image. We'll extract the title and fetch info!</p>
+
 
   <!-- Link external JS -->
   <script src="script.js"></script>

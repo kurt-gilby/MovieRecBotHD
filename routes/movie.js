@@ -3,6 +3,9 @@ const router = express.Router();
 const getGPTResponse = require('../utils/gpt');
 const getRecommendations = require('../utils/tmdb');
 const recognizeSpeechFromAudio = require("../utils/speech");
+const extractTextFromImage = require("../utils/vision"); 
+
+
 
 router.post('/chat', async (req, res) => {
     const {userMessage} = req.body;
@@ -32,6 +35,20 @@ router.post('/speech', async (req, res) => {
         console.error("❌ Error in /speech route:", error.message);
         res.status(500).send('Error processing speech');
     }
+    });
+    router.post('/ocr', async (req, res) => {
+        try {
+            const imageBuffer = req.body.image; // Base64 image coming from frontend
+            const imageBytes = Buffer.from(imageBuffer, 'base64');
+    
+            const extractedText = await extractTextFromImage(imageBytes);
+    
+            res.json({ text: extractedText });
+    
+        } catch (error) {
+            console.error("❌ Error in /ocr route:", error.message);
+            res.status(500).send('Error processing image OCR');
+        }
     });
 
     module.exports = router;

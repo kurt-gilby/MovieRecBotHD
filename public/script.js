@@ -4,6 +4,9 @@ const chatForm = document.getElementById("chat-form");
 const playbackBtn = document.getElementById("playbackBtn");
 const audioPlayer = document.getElementById("audioPlayer");
 const gptResponse = document.getElementById("gpt-response");
+const imageInput = document.getElementById('imageInput');
+const imageForm = document.getElementById('image-form');
+
 
 let capturedAudioBlob = null;
 
@@ -195,5 +198,43 @@ micButton.addEventListener("click", async () => {
 playbackBtn.addEventListener("click", () => {
   if (capturedAudioBlob) {
     audioPlayer.play();
+  }
+});
+
+imageForm.addEventListener('change', async () => {
+  if (!imageInput.files || imageInput.files.length === 0) {
+    alert("Please select an image.");
+    return;
+  }
+
+  const file = imageInput.files[0];
+  const formData = new FormData();
+  formData.append('image', file);
+
+  gptResponse.textContent = "📸 Scanning image...";
+  gptResponse.style.display = "block";
+  document.getElementById("movie-list").innerHTML = "";
+
+  try {
+    const ocrResponse = await fetch('/api/ocr', {
+      method: 'POST',
+      body: formData
+    });
+
+    const ocrData = await ocrResponse.json();
+
+    if (ocrData.text) {
+      console.log("🔍 OCR Extracted:", ocrData.text);
+      userMessageInput.value = ocrData.text;
+
+      // Auto submit the extracted text to GPT/movie search
+      chatForm.dispatchEvent(new Event('submit'));
+    } else {
+      gptResponse.textContent = "❌ No text detected in image.";
+    }
+
+  } catch (err) {
+    console.error("❌ Error in image OCR:", err.message);
+    gptResponse.textContent = "❌ Failed to scan image.";
   }
 });
