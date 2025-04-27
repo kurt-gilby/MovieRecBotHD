@@ -1,9 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config(); // Load environment variables from .env file
+  }
 const dotenv = require('dotenv');
+dotenv.config();
 const cors = require('cors');
 const multer = require('multer');
-dotenv.config();
+
 
 const app = express();
 app.use(cors());
