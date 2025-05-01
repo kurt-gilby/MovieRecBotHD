@@ -78,4 +78,4 @@ node index.js
 
 📄 License
 This project is for educational and personal use.
-Commercial usage requires API providers' license agreements (Azure, TMDb). 
+Commercial usage requires API providers' license agreements (Azure, TMDb).
